@@ -1,0 +1,96 @@
+From 11f50152a8398a740012dc6e7eab898f0461e154 Mon Sep 17 00:00:00 2001
+From: Ray Donnelly <mingw.android@gmail.com>
+Date: Thu, 27 Apr 2017 06:18:17 -0500
+Subject: [PATCH 2/3] Add changes from https://github.com/ren85/leveldb-windows
+
+.. And a few minor tweaks of my own. I do not think that I want to use
+the VC project files from this and will add CMakeLists.txt from another
+fork next.
+---
+ .gitignore           | 1 +
+ db/db_iter.cc        | 5 +++++
+ include/leveldb/db.h | 5 +++++
+ port/win/stdint.h    | 4 ----
+ util/env_win.cc      | 4 ++--
+ 5 files changed, 13 insertions(+), 6 deletions(-)
+
+diff --git a/.gitignore b/.gitignore
+index 71d87a4..ca0f37a 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -11,3 +11,4 @@ Release
+ Debug
+ Benchmark
+ vs2010.*
++ LevelDB.sdf
+diff --git a/db/db_iter.cc b/db/db_iter.cc
+index 3b2035e..6e6e942 100644
+--- a/db/db_iter.cc
++++ b/db/db_iter.cc
+@@ -14,6 +14,11 @@
+ #include "util/mutexlock.h"
+ #include "util/random.h"
+ 
++#if defined(_MSC_VER)
++#include <BaseTsd.h>
++typedef SSIZE_T ssize_t;
++#endif
++
+ namespace leveldb {
+ 
+ #if 0
+diff --git a/include/leveldb/db.h b/include/leveldb/db.h
+index 9752cba..e62c256 100644
+--- a/include/leveldb/db.h
++++ b/include/leveldb/db.h
+@@ -16,6 +16,11 @@ namespace leveldb {
+ static const int kMajorVersion = 1;
+ static const int kMinorVersion = 19;
+ 
++#define LEVELDB_VERSION_MAJOR 1
++#define LEVELDB_VERSION_MINOR 19
++#define LEVELDB_VERSION_PATCH 0
++#define LEVELDB_VERSION_STRING "1.19.0"
++
+ struct Options;
+ struct ReadOptions;
+ struct WriteOptions;
+diff --git a/port/win/stdint.h b/port/win/stdint.h
+index 39edd0d..6c490ed 100644
+--- a/port/win/stdint.h
++++ b/port/win/stdint.h
+@@ -7,10 +7,6 @@
+ #ifndef STORAGE_LEVELDB_PORT_WIN_STDINT_H_
+ #define STORAGE_LEVELDB_PORT_WIN_STDINT_H_
+ 
+-#if !defined(_MSC_VER)
+-#error This file should only be included when compiling with MSVC.
+-#endif
+-
+ // Define C99 equivalent types.
+ typedef signed char           int8_t;
+ typedef signed short          int16_t;
+diff --git a/util/env_win.cc b/util/env_win.cc
+index d32c4e6..1794158 100644
+--- a/util/env_win.cc
++++ b/util/env_win.cc
+@@ -761,14 +761,14 @@ uint64_t Win32Env::NowMicros()
+ static Status CreateDirInner( const std::string& dirname )
+ {
+     Status sRet;
+-    DWORD attr = ::GetFileAttributes(dirname.c_str());
++    DWORD attr = ::GetFileAttributesA(dirname.c_str());
+     if (attr == INVALID_FILE_ATTRIBUTES) { // doesn't exist:
+       std::size_t slash = dirname.find_last_of("\\");
+       if (slash != std::string::npos){
+ 	sRet = CreateDirInner(dirname.substr(0, slash));
+ 	if (!sRet.ok()) return sRet;
+       }
+-      BOOL result = ::CreateDirectory(dirname.c_str(), NULL);
++      BOOL result = ::CreateDirectoryA(dirname.c_str(), NULL);
+       if (result == FALSE) {
+ 	sRet = Status::IOError(dirname, "Could not create directory.");
+ 	return sRet;
+-- 
+2.11.1
+

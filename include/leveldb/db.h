@@ -16,6 +16,11 @@ namespace leveldb {
 static const int kMajorVersion = 1;
 static const int kMinorVersion = 19;
 
+#define LEVELDB_VERSION_MAJOR 1
+#define LEVELDB_VERSION_MINOR 19
+#define LEVELDB_VERSION_PATCH 0
+#define LEVELDB_VERSION_STRING "1.19.0"
+
 struct Options;
 struct ReadOptions;
 struct WriteOptions;
